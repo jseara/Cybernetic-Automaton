@@ -6,8 +6,6 @@ using UnityEngine;
 
 public class Program : MonoBehaviour
 {
-    [SerializeField] private string dataFile = "/Data/TestFile.txt";
-
     List<State> states;
     List<Transition> transitions;
     State originalState;
@@ -63,7 +61,7 @@ public class Program : MonoBehaviour
         lastInputSymbol = "epsilon";
         lastOutputSymbol = "epsilon";
 
-        dataFile = Application.dataPath + dataFile;
+
     }
 
     private void reset()
@@ -194,8 +192,18 @@ public class Program : MonoBehaviour
         //Console.WriteLine(p.currentState.GetOutTransition("epsilon").GetInputSymbol());
 
 
-
-        gatherInput();                                                                    //      Step 3 - Gather input
+        if (data.Count == 0)
+        {
+            DataReader reader = new DataReader();
+            data = reader.gatherInput();
+            currentInputBatch = data[0];
+        }
+        else
+        {
+            iteration++;
+            lastInputBatch = currentInputBatch;
+            currentInputBatch = data[iteration];
+        }                                                                 //      Step 3 - Gather input
 
         if (currentInputBatch.ContainsKey("epsilon"))                                     //      Step 2 - If epsilon symbol, reset
             reset();
@@ -307,67 +315,7 @@ public class Program : MonoBehaviour
         Console.ReadLine();
         //        NOTE: (q0,A) = transition 
     }
-    void gatherInput()
-    {
 
-        if (data.Count == 0)
-        {
-            try
-            {   // Open the text file using a stream reader.
-                //using (StreamReader sr = new StreamReader(dataFile))
-                //{
-                    //String text = sr.ReadToEnd();
-                    TextAsset SourceFile = (TextAsset)Resources.Load("TestFile", typeof(TextAsset));
-                    String text = SourceFile.text;
-                    Debug.Log(text);
-
-                    String[] lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        data.Add(new Dictionary<string, float>());
-
-                        if (!String.IsNullOrEmpty(lines[i]))
-                        {
-                            String[] values = lines[i].Split(new[] { ";" }, StringSplitOptions.None);
-
-                            for (int j = 0; j < values.Length; j++)
-                            {
-                                String[] pair = values[j].Split(new[] { "," }, StringSplitOptions.None);
-                                data[i].Add(pair[0], float.Parse(pair[1]));
-                            }
-                        }
-                        else
-                        {
-                            data[i].Add("epsilon", 0);
-                            Console.WriteLine("Epsilon output");
-                        }
-                    }
-                //}
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("The file could not be read:");
-                Debug.LogError(e.Message);
-            }
-
-            currentInputBatch = data[0];
-        }
-        else
-        {
-            iteration++;
-            lastInputBatch = currentInputBatch;
-            currentInputBatch = data[iteration];
-        }
-        for (int j = 0; j < data.Count; j++)
-        {
-            foreach (KeyValuePair<string, float> pair in data[j])
-            {
-                Console.WriteLine("Key = {0}, Value = {1}", pair.Key, pair.Value);
-            }
-        }
-
-    }
 
     private void Mark(Dictionary<string, float> input)
     {
@@ -408,10 +356,10 @@ public class Program : MonoBehaviour
 
     private void Output()
     {
-        Debug.LogWarning("Current Number of States in the System: {0}" + states.Count);
-        Debug.LogWarning("Current Number of Transitions in the System: {0}" + transitions.Count);
-        Debug.LogWarning("Current State has {0} transitions." + currentState.GetInTransitions().Count);
-        Debug.LogWarning("Current Output Symbol is: {0}" + currentOutputSymbol);
+        Debug.LogWarning("Current Number of States in the System: " + states.Count);
+        Debug.LogWarning("Current Number of Transitions in the System: " + transitions.Count);
+        Debug.LogWarning("Current State has {0} transitions. " + currentState.GetInTransitions().Count);
+        Debug.LogWarning("Current Output Symbol is: " + currentOutputSymbol);
     }
 }
 
