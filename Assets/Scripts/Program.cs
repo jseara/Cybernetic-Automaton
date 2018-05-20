@@ -135,31 +135,6 @@ public class Program : MonoBehaviour
             - init statement
                 - q0 is initial state which can be set
 
-
-
-            - Step 9 Update Expectations
-                If transition exists
-                    deltaExpectation = (alpha)*(1-previous expectation)
-                    expectation += deltaExpectation
-                    confidence = confidence * (1-((beta)confidenceLearningStrength * abs(deltaExpectation))
-                ///Expectations are how transitions relate to each other
-                Symbols are how transitions relate to states
-                else if expectation did not exist previously
-                    create new link in expectation storage unit (symmetrically) and set the expectation to be equal to (alpha) predetermined value
-                for each symbol in the input language 
-                    if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
-                        lower expectation using math
-
-                        lower confidence using math
-                    if (there's another way we could have gotten here) a state exists within state machine, 
-                        lower
-                    if two or more input symbols exists in input language and they have a previous expectation relationship
-                        if both symbols exist in input batch 
-                            increase expectation
-                            increase confidence
-                        if both symbols did not exist in input batch
-                            decrease expectation
-                            decrease confidence
             - Step 9.5 Set last state to be current state (ql = c)
             - c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
             - Step 10.5 Set current input symbol to last input symbol al = ad
@@ -299,10 +274,7 @@ public class Program : MonoBehaviour
                     transitions.Add(newTransition);
 
                 }
-                else if (outTrans[i].GetInputSymbol() == kvp.Key)
-                {
 
-                }
             }
 
         }
@@ -355,6 +327,118 @@ public class Program : MonoBehaviour
         transitions.Add(newTransition);
     }
 
+    private void UpdateExpectations()
+    {
+        //     - Step 9 Update Expectations
+        Transition currentTrans = currentState.GetOutTransition(dominantInputSymbol);
+        Transition lastTrans = new Transition(lastInputSymbol);
+        int x = -1, y = -1;
+
+        foreach (Transition t in currentState.GetInTransitions())
+        {
+            if (t.GetPreviousState().Equals(lastState))
+            {
+                lastTrans = t;
+                break;
+            }
+        }
+        for (int i = 0; i < transitions.Count; i++)
+        {
+            if (lastTrans.Equals(transitions[i]))
+                x = i;
+            if (currentTrans.Equals(transitions[i]))
+                y = i;
+        }
+        float[,] expectation = currentTrans.GetExpectationMatrix();
+        if (x != -1 && y != -1)
+        {
+            if (expectation[x, y] != 0)                                          // If transition exists
+            {
+                //     deltaExpectation = (alpha)*(1-previous expectation)
+                //     expectation += deltaExpectation
+                //     confidence = confidence * (1-((beta)confidenceLearningStrength * abs(deltaExpectation))
+            }
+            else                                                                // else if expectation did not exist previously
+            {
+                //     create new link in expectation storage unit (symmetrically) and set the expectation to be equal to (alpha) predetermined value
+            }
+        }
+        foreach (String a in inputAlphabet) // for each symbol in the input language 
+        {
+            if (/*checkForExpectationExistence*/)
+            {
+                if (!currentInputBatch.ContainsKey(a)) //     if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
+                {
+                    //         lower expectation using math
+
+                    //         lower confidence using math
+                }
+            }
+
+        }
+
+        foreach (State q in states)
+        {
+            foreach (String a in inputAlphabet)
+            {
+                if (currentState.Equals(lastState) && a != lastInputSymbol) //     if (there's another way we could have gotten here) a state exists within state machine, 
+                {
+                    if (/*checkForExpectationExistence*/)
+                    {
+                        /*DO MATH*/
+                        //         lower
+                    }
+                }
+            }
+        }
+
+        foreach (String a in inputAlphabet)
+        {
+            foreach (String b in inputAlphabet)         //     if two or more input symbols exists in input language and they have a previous expectation relationship
+            {
+                if (b == a)
+                {
+                    break;
+                }
+                if (inputAlphabet.Contains(a) && inputAlphabet.Contains(b))         //         if both symbols exist in input batch 
+                {
+                    if (/*checkForExpectationExistence*/)
+                    {
+                        //             increase expectation
+                        //             increase confidence
+                    }
+                    else            
+                    {
+                        expectation[x,y] = expectationLearnFactor;
+                    }
+                }
+                else(inputAlphabet.Contains(a) || inputAlphabet.Contains(b)) //         if both symbols did not exist in input batch
+                {
+                    if (/*checkForExpectationExistence*/)
+                    {
+
+                    }
+                    //             decrease expectation
+                        //             decrease confidence
+                }
+            }
+        }
+
+        // ///Expectations are how transitions relate to each other
+        // Symbols are how transitions relate to states
+
+
+
+
+
+
+
+
+
+
+
+
+    }
     private void Output()
     {
         Debug.LogWarning("Current Number of States in the System: " + states.Count);
@@ -362,6 +446,7 @@ public class Program : MonoBehaviour
         Debug.LogWarning("Current State has {0} transitions. " + currentState.GetInTransitions().Count);
         Debug.LogWarning("Current Output Symbol is: " + currentOutputSymbol);
     }
+
 
 
 
