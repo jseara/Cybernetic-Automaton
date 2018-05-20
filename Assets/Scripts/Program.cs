@@ -64,6 +64,151 @@ public class Program : MonoBehaviour
 
     }
 
+
+
+    /*
+        Sigma = input [ a b c e ]
+        Delta = Output [ delta beta gamma ]
+        Q(state) = [q0]
+        delta   = []
+        lambda  = randomly choosing something in your probability output matrix (dictionary )
+        q0 = original state
+        list of reward states
+        list of punishment states
+        list of confidences
+        list of expectations
+        epsilon = NULL
+        beta    = Confidence Learning Factor
+        alpha   = Expectation Learning Factor
+        zeta    = Speed of Learning Factor
+        kappa   = Time Relevance  
+        */
+    void Start()
+    {
+        //      Step 1 - Initial State
+
+        initialize();
+
+        //This is just testing information.  Checks to make sure all initialization works as intented.
+        /* 
+        if ((p.data != null) && (p.iteration == 0) && (p.dominantInput != null))
+            if ((p.originalState != null) && (p.currentState.Equals(p.originalState)) && (p.lastState.Equals(p.originalState)))
+                if (p.lastInputSymbol.Equals("epsilon") && (p.lastOutputSymbol.Equals("epsilon")))
+                    Console.WriteLine("Initialization complete");
+        */
+        //Console.WriteLine(p.currentState.GetOutTransition("epsilon").GetInputSymbol());
+
+
+        if (data.Count == 0)                                                            //      Step 3 - Gather input
+        {
+            DataReader reader = new DataReader();
+            data = reader.gatherInput();
+            currentInputBatch = data[0];
+        }
+        else
+        {
+            iteration++;
+            lastInputBatch = currentInputBatch;
+            currentInputBatch = data[iteration];
+        }
+
+        if (currentInputBatch.ContainsKey("epsilon"))                                     //      Step 2 - If epsilon symbol, reset
+            reset();
+
+        findDominantInput();                                                              //      Step 4 - find strongest input
+
+        CreateNewTransitions();                                                           //      Step 5 - Create New Transitions
+
+        lastOutputSymbol = currentOutputSymbol;                                         //      Step 6 - last output = output
+
+        Transition dominantTransition = currentState.GetOutTransition(dominantInputSymbol);
+
+        rollDie(dominantTransition);                                                      //      Step 7 - Strength of output symbol is equal to (input symbol strength * confidence)/(1+confidence)
+
+        Mark(dominantInput);                                                            //      Step 8 - Mark the output symbol and its strength for later modification
+
+        Output();
+        /*
+
+
+        Try doing: 
+            - init statement
+                - q0 is initial state which can be set
+
+
+
+            - Step 9 Update Expectations
+                If transition exists
+                    deltaExpectation = (alpha)*(1-previous expectation)
+                    expectation += deltaExpectation
+                    confidence = confidence * (1-((beta)confidenceLearningStrength * abs(deltaExpectation))
+                ///Expectations are how transitions relate to each other
+                Symbols are how transitions relate to states
+                else if expectation did not exist previously
+                    create new link in expectation storage unit (symmetrically) and set the expectation to be equal to (alpha) predetermined value
+                for each symbol in the input language 
+                    if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
+                        lower expectation using math
+
+                        lower confidence using math
+                    if (there's another way we could have gotten here) a state exists within state machine, 
+                        lower
+                    if two or more input symbols exists in input language and they have a previous expectation relationship
+                        if both symbols exist in input batch 
+                            increase expectation
+                            increase confidence
+                        if both symbols did not exist in input batch
+                            decrease expectation
+                            decrease confidence
+            - Step 9.5 Set last state to be current state (ql = c)
+            - c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
+            - Step 10.5 Set current input symbol to last input symbol al = ad
+            - Step 11 If current state is listed in Reward State list, Apply Reward.  Else if current state is listed in Punishment State List, apply punishment.  Else if does not exist in either list, apply conditioning
+                - How to set reward state?
+                Apply Reward
+                    set t = 1
+                    for each distribution that is marked, starting with most recent and moving back in time
+                        for each marked element (x) in distribution
+                            the percentage that gets us x = previous percentge + (zeta, previously ) * t * strength of input *(1/Confidence)/(1 + (zeta, previously set value) * t * strength of input * (1/Confidence))
+                            for all percentages that do not get us x (y), decrease by math
+                            deltaConfidence = zeta * t * strength of input
+                            Confidence += deltaConfidence
+                            Unmark (x)
+                            for each state q in q
+                                update values based on their percentage values
+
+                            Unmark percentage
+                            t = (kappa, previously  * t
+
+                Apply Punishment
+                    set t = 1
+                        for each distribution that is marked, starting with most recent and moving back in time
+                            for each marked element (x) in distribution
+                                increase probability of all y by equal amount
+                                decrease probability of x by sum total of all deltaY probabilities
+                                change confidence
+                                for each state q in q
+                                    update values based on their percentage matrices
+                                umark percentage
+                                t = kappa *t
+
+                Apply Conditioning
+                    when you have a chain of outputs that are not the same (last output != epsilon) & current output != last output
+                        for each input symbol in input library
+                            if expectation exists between our last transition and ANY transition that was on our last state THAT WAS IN OUR LAST INPUT
+                                then increase probability of input symbol we are checking producing last output symbol
+                                decrease probability of everything else
+                            for every state AND every symbol if there is a transition (using that state,symbol pairing) to our last state
+                                update the probability of the transition leading to the last state
+
+
+    ///     - Step 11 
+    ///     - Step 12 go to step 2
+    */
+        Console.ReadLine();
+        //        NOTE: (q0,A) = transition 
+    }
+
     private void reset()
     {
         // Step 2
@@ -79,6 +224,24 @@ public class Program : MonoBehaviour
         //MarkedElementProbabilities.clear()                                                //      Unmark all symbols and distributions
         //Loop
         // Go to step 2
+    }
+
+    private void findDominantInput()
+    {
+
+        float maximumValue = 0;
+        string maximumKey = "";
+        foreach (KeyValuePair<string, float> kvp in currentInputBatch)
+        {
+            if (kvp.Value > maximumValue)
+            {
+                maximumValue = kvp.Value;
+                maximumKey = kvp.Key;
+            }
+        }
+        Console.WriteLine("Dominant Input is: {0}, {1}", maximumKey, maximumValue);
+        dominantInput.Add(maximumKey, maximumValue);
+        dominantInputSymbol = maximumKey;
     }
 
     private void CreateNewTransitions()
@@ -169,175 +332,13 @@ public class Program : MonoBehaviour
             }
             iterator += 2;
         }
-
-
-        for (int i = 0; i < percentages.Length; i++)
-        {
-
-        }
     }
-
-    void Start()
-    {
-        //      Step 1 - Initial State
-
-        initialize();
-
-        /* 
-        if ((p.data != null) && (p.iteration == 0) && (p.dominantInput != null))
-            if ((p.originalState != null) && (p.currentState.Equals(p.originalState)) && (p.lastState.Equals(p.originalState)))
-                if (p.lastInputSymbol.Equals("epsilon") && (p.lastOutputSymbol.Equals("epsilon")))
-                    Console.WriteLine("Initialization complete");
-        */
-        //Console.WriteLine(p.currentState.GetOutTransition("epsilon").GetInputSymbol());
-
-
-        if (data.Count == 0)
-        {
-            DataReader reader = new DataReader();
-            data = reader.gatherInput();
-            currentInputBatch = data[0];
-        }
-        else
-        {
-            iteration++;
-            lastInputBatch = currentInputBatch;
-            currentInputBatch = data[iteration];
-        }                                                                 //      Step 3 - Gather input
-
-        if (currentInputBatch.ContainsKey("epsilon"))                                     //      Step 2 - If epsilon symbol, reset
-            reset();
-
-        findDominantInput();                                                              //      Step 4 - find strongest input
-
-        CreateNewTransitions();                                                           //      Step 5 - Create New Transitions
-
-        lastOutputSymbol = currentOutputSymbol;                                         //      Step 6 - last output = output
-
-        Transition dominantTransition = currentState.GetOutTransition(dominantInputSymbol);
-
-        rollDie(dominantTransition);                                                      //      Step 7 - Strength of output symbol is equal to (input symbol strength * confidence)/(1+confidence)
-
-        Mark(dominantInput);                                                            //      Step 8 - Mark the output symbol and its strength for later modification
-
-        Output();
-        /*
-        Sigma = input [ a b c e ]
-        Delta = Output [ delta beta gamma ]
-        Q(state) = [q0]
-        delta   = []
-        lambda  = randomly choosing something in your probability output matrix (dictionary )
-        q0 = original state
-        list of reward states
-        list of punishment states
-        list of confidences
-        list of expectations
-        epsilon = NULL
-        beta    = Confidence Learning Factor
-        alpha   = Expectation Learning Factor
-        zeta    = Speed of Learning Factor
-        kappa   = Time Relevance 
-
-        Try doing: 
-            - init statement
-                - q0 is initial state which can be set
-
-
-
-            - Step 9 Update Expectations
-                If transition exists
-                    deltaExpectation = (alpha)*(1-previous expectation)
-                    expectation += deltaExpectation
-                    confidence = confidence * (1-((beta)confidenceLearningStrength * abs(deltaExpectation))
-                ///Expectations are how transitions relate to each other
-                Symbols are how transitions relate to states
-                else if expectation did not exist previously
-                    create new link in expectation storage unit (symmetrically) and set the expectation to be equal to (alpha) predetermined value
-                for each symbol in the input language 
-                    if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
-                        lower expectation using math
-
-                        lower confidence using math
-                    if (there's another way we could have gotten here) a state exists within state machine, 
-                        lower
-                    if two or more input symbols exists in input language and they have a previous expectation relationship
-                        if both symbols exist in input batch 
-                            increase expectation
-                            increase confidence
-                        if both symbols did not exist in input batch
-                            decrease expectation
-                            decrease confidence
-            - Step 9.5 Set last state to be current state (ql = c)
-            - c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
-            - Step 10.5 Set current input symbol to last input symbol al = ad
-            - Step 11 If current state is listed in Reward State list, Apply Reward.  Else if current state is listed in Punishment State List, apply punishment.  Else if does not exist in either list, apply conditioning
-                - How to set reward state?
-                Apply Reward
-                    set t = 1
-                    for each distribution that is marked, starting with most recent and moving back in time
-                        for each marked element (x) in distribution
-                            the percentage that gets us x = previous percentge + (zeta, previously ) * t * strength of input *(1/Confidence)/(1 + (zeta, previously set value) * t * strength of input * (1/Confidence))
-                            for all percentages that do not get us x (y), decrease by math
-                            deltaConfidence = zeta * t * strength of input
-                            Confidence += deltaConfidence
-                            Unmark (x)
-                            for each state q in q
-                                update values based on their percentage values
-
-                            Unmark percentage
-                            t = (kappa, previously  * t
-
-                Apply Punishment
-                    set t = 1
-                        for each distribution that is marked, starting with most recent and moving back in time
-                            for each marked element (x) in distribution
-                                increase probability of all y by equal amount
-                                decrease probability of x by sum total of all deltaY probabilities
-                                change confidence
-                                for each state q in q
-                                    update values based on their percentage matrices
-                                umark percentage
-                                t = kappa *t
-
-                Apply Conditioning
-                    when you have a chain of outputs that are not the same (last output != epsilon) & current output != last output
-                        for each input symbol in input library
-                            if expectation exists between our last transition and ANY transition that was on our last state THAT WAS IN OUR LAST INPUT
-                                then increase probability of input symbol we are checking producing last output symbol
-                                decrease probability of everything else
-                            for every state AND every symbol if there is a transition (using that state,symbol pairing) to our last state
-                                update the probability of the transition leading to the last state
-
-
-    ///     - Step 11 
-    ///     - Step 12 go to step 2
-    */
-        Console.ReadLine();
-        //        NOTE: (q0,A) = transition 
-    }
-
 
     private void Mark(Dictionary<string, float> input)
     {
 
     }
-    private void findDominantInput()
-    {
 
-        float maximumValue = 0;
-        string maximumKey = "";
-        foreach (KeyValuePair<string, float> kvp in currentInputBatch)
-        {
-            if (kvp.Value > maximumValue)
-            {
-                maximumValue = kvp.Value;
-                maximumKey = kvp.Key;
-            }
-        }
-        Console.WriteLine("Dominant Input is: {0}, {1}", maximumKey, maximumValue);
-        dominantInput.Add(maximumKey, maximumValue);
-        dominantInputSymbol = maximumKey;
-    }
 
     private void CreateTransitionAndLinkWithStates(State startState, string input, State endState)
     {
@@ -361,5 +362,11 @@ public class Program : MonoBehaviour
         Debug.LogWarning("Current State has {0} transitions. " + currentState.GetInTransitions().Count);
         Debug.LogWarning("Current Output Symbol is: " + currentOutputSymbol);
     }
+
+
+
+
+
+
 }
 
