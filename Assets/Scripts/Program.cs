@@ -407,38 +407,64 @@ public class Program : MonoBehaviour
                         //             increase expectation
                         //             increase confidence
                     }
-                    else            
+                    else
                     {
-                        expectation[x,y] = expectationLearnFactor;
+                        expectation[x, y] = expectationLearnFactor;
                     }
                 }
-                else(inputAlphabet.Contains(a) || inputAlphabet.Contains(b)) //         if both symbols did not exist in input batch
+                else (inputAlphabet.Contains(a) || inputAlphabet.Contains(b)) //         if both symbols did not exist in input batch
                 {
                     if (/*checkForExpectationExistence*/)
                     {
 
                     }
                     //             decrease expectation
-                        //             decrease confidence
+                    //             decrease confidence
                 }
             }
         }
-
-        // ///Expectations are how transitions relate to each other
-        // Symbols are how transitions relate to states
-
-
-
-
-
-
-
-
-
-
-
-
     }
+
+    private int[] checkForExpectationExistence(State oldState, String oldSymbol, State currState, String currSymbol)
+    {
+        Transition currentTrans = currState.GetOutTransition(currSymbol);
+        Transition lastTrans = new Transition(oldSymbol);
+
+        int x = -1, y = -1;
+
+        foreach (Transition t in currState.GetInTransitions())
+        {
+            if (t.GetPreviousState().Equals(oldState))
+            {
+                lastTrans = t;
+                break;
+            }
+        }
+        for (int i = 0; i < transitions.Count; i++)
+        {
+            if (lastTrans.Equals(transitions[i]))
+                x = i;
+            if (currentTrans.Equals(transitions[i]))
+                y = i;
+        }
+        int[] returnValues = new int[2] {x,y};
+        return returnValues;
+    }
+    // ///Expectations are how transitions relate to each other
+    // Symbols are how transitions relate to states
+
+
+
+
+
+
+
+
+
+
+
+
+
     private void Output()
     {
         Debug.LogWarning("Current Number of States in the System: " + states.Count);
