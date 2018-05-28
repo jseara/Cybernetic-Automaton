@@ -116,12 +116,11 @@ public class Program : MonoBehaviour
             reset();
 
         findDominantInput();                                                              //      Step 4 - find strongest input
-
+        Transition dominantTransition = currentState.GetOutTransition(dominantInputSymbol);
+        
         CreateNewTransitions();                                                           //      Step 5 - Create New Transitions
 
         lastOutputSymbol = currentOutputSymbol;                                         //      Step 6 - last output = output
-
-        Transition dominantTransition = currentState.GetOutTransition(dominantInputSymbol);
 
         rollDie(dominantTransition);                                                      //      Step 7 - Strength of output symbol is equal to (input symbol strength * confidence)/(1+confidence)
 
@@ -221,14 +220,15 @@ public class Program : MonoBehaviour
                                                                                             //anchorState = currentState;                                                       //      Let anchor state = current state
         lastInputSymbol = "e";                                                              //      Let last symbol and last output symbol equal epsilon
         lastOutputSymbol = "e";
-        //MarkedElementProbabilities.clear()                                                //      Unmark all symbols and distributions
-        //Loop
+        // TODO
+        //MarkedElementProbabilities.clear()                                                 //      Unmark all symbols and distributions
+        //Loop TODO
         // Go to step 2
     }
 
     private void findDominantInput()
     {
-
+        // TODO reset dominantInput 
         float maximumValue = 0;
         string maximumKey = "";
         foreach (KeyValuePair<string, float> kvp in currentInputBatch)
@@ -301,7 +301,7 @@ public class Program : MonoBehaviour
                 }
                 else if (outTrans[i].GetInputSymbol() == kvp.Key)
                 {
-
+                    
                 }
             }
 
