@@ -106,4 +106,12 @@ public class Transition : IEquatable<Transition>
     {
         return temporary;
     }
+    public float[,] GetExpectationMatrix()
+    {
+        return expectationMatrix;
+    }
+    public void SetExpectationMatrix(float[,] expect)
+    {
+        expectationMatrix = expect;
+    }
 }
