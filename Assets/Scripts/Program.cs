@@ -333,6 +333,7 @@ public class Program : MonoBehaviour
         Transition currentTrans = currentState.GetOutTransition(dominantInputSymbol);
         Transition lastTrans = new Transition(lastInputSymbol);
         int x = -1, y = -1;
+        int[] returnValues = new int[2] {x,y};
 
         foreach (Transition t in currentState.GetInTransitions())
         {
@@ -365,7 +366,8 @@ public class Program : MonoBehaviour
         }
         foreach (String a in inputAlphabet) // for each symbol in the input language 
         {
-            if (/*checkForExpectationExistence*/)
+            returnValues = checkForExpectationExistence(lastState, lastInputSymbol, currentState, a);
+            if (returnValues[0] != -1 && returnValues[1] != -1)
             {
                 if (!currentInputBatch.ContainsKey(a)) //     if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
                 {
@@ -383,7 +385,8 @@ public class Program : MonoBehaviour
             {
                 if (currentState.Equals(lastState) && a != lastInputSymbol) //     if (there's another way we could have gotten here) a state exists within state machine, 
                 {
-                    if (/*checkForExpectationExistence*/)
+                    returnValues = checkForExpectationExistence(lastState, lastInputSymbol, q, a);
+                    if (returnValues[0] != -1 && returnValues[1] != -1)
                     {
                         /*DO MATH*/
                         //         lower
@@ -402,7 +405,8 @@ public class Program : MonoBehaviour
                 }
                 if (inputAlphabet.Contains(a) && inputAlphabet.Contains(b))         //         if both symbols exist in input batch 
                 {
-                    if (/*checkForExpectationExistence*/)
+                    returnValues = checkForExpectationExistence(lastState, b, currentState, a);
+                    if (returnValues[0] != -1 && returnValues[1] != -1)
                     {
                         //             increase expectation
                         //             increase confidence
@@ -412,9 +416,10 @@ public class Program : MonoBehaviour
                         expectation[x, y] = expectationLearnFactor;
                     }
                 }
-                else (inputAlphabet.Contains(a) || inputAlphabet.Contains(b)) //         if both symbols did not exist in input batch
+                else if(inputAlphabet.Contains(a) || inputAlphabet.Contains(b)) //         if both symbols did not exist in input batch
                 {
-                    if (/*checkForExpectationExistence*/)
+                    returnValues = checkForExpectationExistence(lastState, b, currentState, a);
+                    if (returnValues[0] != -1 && returnValues[1] != -1)
                     {
 
                     }
@@ -453,18 +458,6 @@ public class Program : MonoBehaviour
     // ///Expectations are how transitions relate to each other
     // Symbols are how transitions relate to states
 
-
-
-
-
-
-
-
-
-
-
-
-
     private void Output()
     {
         Debug.LogWarning("Current Number of States in the System: " + states.Count);
@@ -472,12 +465,5 @@ public class Program : MonoBehaviour
         Debug.LogWarning("Current State has {0} transitions. " + currentState.GetInTransitions().Count);
         Debug.LogWarning("Current Output Symbol is: " + currentOutputSymbol);
     }
-
-
-
-
-
-
-
 }
 

@@ -48,15 +48,15 @@ public class DataReader
             Debug.LogError(e.Message);
         }
 
-        return data;
-
-
-        for (int j = 0; j < data.Count; j++)
+        /*         for (int j = 0; j < data.Count; j++)
         {
             foreach (KeyValuePair<string, float> pair in data[j])
             {
                 Console.WriteLine("Key = {0}, Value = {1}", pair.Key, pair.Value);
             }
         }
+        */
+        
+        return data;
     }
 }
