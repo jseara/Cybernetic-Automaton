@@ -44,6 +44,7 @@ public class Program : MonoBehaviour
     List<State> RewardStates;
     List<State> PunishmentStates;
 
+
     private void initialize()
     {
         states = new List<State>();
@@ -353,14 +354,26 @@ public class Program : MonoBehaviour
         float[,] expectation = currentTrans.GetExpectationMatrix();
         if (x != -1 && y != -1)
         {
-            if (expectation[x, y] != 0)                                          // If transition exists
+            if (expectation[x, y] != 0) // If transition exists
             {
-                //     deltaExpectation = (alpha)*(1-previous expectation)
-                //     expectation += deltaExpectation
+                float deltaExpectation = expectationLearnFactor * (1 - expectation[x, y]); //     deltaExpectation = (alpha)*(1-previous expectation)
+                expectation[x, y] += deltaExpectation;
+                currentTrans.SetExpectationMatrix(expectation);
+
                 //     confidence = confidence * (1-((beta)confidenceLearningStrength * abs(deltaExpectation))
+                float[,] confidence = currentTrans.GetConfidence();
+                confidence[x, y] = confidence[x, y] * (1 - confidenceLearnFactor) * Math.Abs(deltaExpectation);
+                currentTrans.SetConfidence(confidence);
             }
+        
             else                                                                // else if expectation did not exist previously
             {
+                expectation[x, y] = expectationLearnFactor; 
+                currentTrans.SetExpectationMatrix(expectation);
+
+                float[,] l_expectation = lastTrans.GetExpectationMatrix();
+                l_expectation[x, y] = expectationLearnFactor;
+                lastTrans.SetExpectationMatrix(l_expectation);
                 //     create new link in expectation storage unit (symmetrically) and set the expectation to be equal to (alpha) predetermined value
             }
         }
@@ -371,6 +384,7 @@ public class Program : MonoBehaviour
             {
                 if (!currentInputBatch.ContainsKey(a)) //     if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
                 {
+                    float deltaExpectations = - expectationLearnFactor *  //TODO NEXT!!!!
                     //         lower expectation using math
 
                     //         lower confidence using math
