@@ -33,7 +33,7 @@ public class Program : MonoBehaviour
     string currentInputSymbol;
 
     string lastOutputSymbol;
-    string currentOutputSymbol;
+    string currentOutputSymbol, rewardOutputSymbol, punishmentOutputSymbol;
     float currentOutputSymbolStrength;
 
     Dictionary<string, float> lastInputBatch;
@@ -63,7 +63,17 @@ public class Program : MonoBehaviour
         lastInputSymbol = "epsilon";
         lastOutputSymbol = "epsilon";
 
+        RewardStates = new List<State>();
+        Transition intoReward = new Transition("a");
+        State reward = new State(intoReward); 
+        RewardStates.Add(reward);
+        rewardOutputSymbol = "z";
 
+        PunishmentStates = new List<State>();
+        Transition intoPunishment = new Transition("b");
+        State punishment = new State(intoPunishment);
+        RewardStates.Add(punishment);
+        punishmentOutputSymbol = "x";
     }
 
 
@@ -136,56 +146,12 @@ public class Program : MonoBehaviour
         currentState = new State(transitionToNew);                                       //      Step 10 -  c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
         lastInputSymbol = currentInputSymbol;                                            //      Step 10.5 - Set current input symbol to last input symbol al = ad
 
-        CheckIfRewardOrPunishment();
+        CheckIfRewardOrPunishment();                                                     //      Step 11 If current state is listed in Reward State list, Apply Reward.  Else if current state is listed in Punishment State List, apply punishment.  Else if does not exist in either list, apply conditioning
+
         Output();
         /*
-
-
-        Try doing: 
-
-
-            
-            
+        Try doing:
             - 
-            - Step 11 If current state is listed in Reward State list, Apply Reward.  Else if current state is listed in Punishment State List, apply punishment.  Else if does not exist in either list, apply conditioning
-                - How to set reward state?
-                Apply Reward
-                    set t = 1
-                    for each distribution that is marked, starting with most recent and moving back in time
-                        for each marked element (x) in distribution
-                            the percentage that gets us x = previous percentge + (zeta, previously ) * t * strength of input *(1/Confidence)/(1 + (zeta, previously set value) * t * strength of input * (1/Confidence))
-                            for all percentages that do not get us x (y), decrease by math
-                            deltaConfidence = zeta * t * strength of input
-                            Confidence += deltaConfidence
-                            Unmark (x)
-                            for each state q in q
-                                update values based on their percentage values
-
-                            Unmark percentage
-                            t = (kappa, previously  * t
-
-                Apply Punishment
-                    set t = 1
-                        for each distribution that is marked, starting with most recent and moving back in time
-                            for each marked element (x) in distribution
-                                increase probability of all y by equal amount
-                                decrease probability of x by sum total of all deltaY probabilities
-                                change confidence
-                                for each state q in q
-                                    update values based on their percentage matrices
-                                umark percentage
-                                t = kappa *t
-
-                Apply Conditioning
-                    when you have a chain of outputs that are not the same (last output != epsilon) & current output != last output
-                        for each input symbol in input library
-                            if expectation exists between our last transition and ANY transition that was on our last state THAT WAS IN OUR LAST INPUT
-                                then increase probability of input symbol we are checking producing last output symbol
-                                decrease probability of everything else
-                            for every state AND every symbol if there is a transition (using that state,symbol pairing) to our last state
-                                update the probability of the transition leading to the last state
-
-
     ///     - Step 11 
     ///     - Step 12 go to step 2
     */
@@ -317,7 +283,7 @@ public class Program : MonoBehaviour
 
     private void Mark(Dictionary<string, float> input)
     {
-
+        //TO-DO: Write the whole thing.
     }
 
 
@@ -469,8 +435,81 @@ public class Program : MonoBehaviour
 
     private void CheckIfRewardOrPunishment()
     {
-        if ()
+        //NOTE: This needs to be updated for allowance of multiple reward states, but eventually
+        if (currentState.Equals(RewardStates[0]))
+        {
+            if (currentOutputSymbol == rewardOutputSymbol)
+            {
+                currentState.MarkAsRewardOrPunishment("reward");
+                ApplyReward();
+            }
+
+        }
+        else if (currentState.Equals(PunishmentStates[0]))
+        {
+            if (currentOutputSymbol == punishmentOutputSymbol)
+            {
+                currentState.MarkAsRewardOrPunishment("punishment");
+                ApplyPunishment();
+            }
+        }
+        else
+            ApplyConditioning();
     }
+
+    private void ApplyReward()
+    {
+        float time = 1;   //  set t = 1
+        /*            
+                - How to set reward state?
+                Apply Reward
+                    
+                    for each distribution that is marked, starting with most recent and moving back in time
+                        for each marked element (x) in distribution
+                            the percentage that gets us x = previous percentge + (zeta, previously ) * t * strength of input *(1/Confidence)/(1 + (zeta, previously set value) * t * strength of input * (1/Confidence))
+                            for all percentages that do not get us x (y), decrease by math
+                            deltaConfidence = zeta * t * strength of input
+                            Confidence += deltaConfidence
+                            Unmark (x)
+                            for each state q in q
+                                update values based on their percentage values
+
+                            Unmark percentage
+                            t = (kappa, previously  * t */
+    }
+    
+    private void ApplyPunishment()
+    {
+        float time = 1; //  set t = 1
+        /*
+                        Apply Punishment
+                    
+                        for each distribution that is marked, starting with most recent and moving back in time
+                            for each marked element (x) in distribution
+                                increase probability of all y by equal amount
+                                decrease probability of x by sum total of all deltaY probabilities
+                                change confidence
+                                for each state q in q
+                                    update values based on their percentage matrices
+                                umark percentage
+                                t = kappa *t */
+    }
+
+    private void ApplyConditioning()
+    {
+        /*
+        
+                Apply Conditioning
+                    when you have a chain of outputs that are not the same (last output != epsilon) & current output != last output
+                        for each input symbol in input library
+                            if expectation exists between our last transition and ANY transition that was on our last state THAT WAS IN OUR LAST INPUT
+                                then increase probability of input symbol we are checking producing last output symbol
+                                decrease probability of everything else
+                            for every state AND every symbol if there is a transition (using that state,symbol pairing) to our last state
+                                update the probability of the transition leading to the last state
+        */
+    }
+
     private void Output()
     {
         Debug.LogWarning("Current Number of States in the System: " + states.Count);
