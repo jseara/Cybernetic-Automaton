@@ -46,6 +46,8 @@ public class Program : MonoBehaviour
 
     private void initialize()
     {
+        //        - init statement
+        //        - q0 is initial state which can be set
         states = new List<State>();
         transitions = new List<Transition>();
 
@@ -85,9 +87,9 @@ public class Program : MonoBehaviour
         */
     void Start()
     {
-        //      Step 1 - Initial State
+       
 
-        initialize();
+        initialize();                                                                   //      Step 1 - Initial State
 
         //This is just testing information.  Checks to make sure all initialization works as intented.
         /* 
@@ -99,7 +101,7 @@ public class Program : MonoBehaviour
         //Console.WriteLine(p.currentState.GetOutTransition("epsilon").GetInputSymbol());
 
 
-        if (data.Count == 0)                                                            //      Step 3 - Gather input
+        if (data.Count == 0)                                                            //       Step 3 - Gather input
         {
             DataReader reader = new DataReader();
             data = reader.gatherInput();
@@ -112,32 +114,39 @@ public class Program : MonoBehaviour
             currentInputBatch = data[iteration];
         }
 
-        if (currentInputBatch.ContainsKey("epsilon"))                                     //      Step 2 - If epsilon symbol, reset
+        if (currentInputBatch.ContainsKey("epsilon"))                                    //      Step 2 - If epsilon symbol, reset
             reset();
 
-        findDominantInput();                                                              //      Step 4 - find strongest input
+        findDominantInput();                                                             //      Step 4 - find strongest input
 
-        CreateNewTransitions();                                                           //      Step 5 - Create New Transitions
+        CreateNewTransitions();                                                          //      Step 5 - Create New Transitions
 
-        lastOutputSymbol = currentOutputSymbol;                                         //      Step 6 - last output = output
+        lastOutputSymbol = currentOutputSymbol;                                          //      Step 6 - last output = output
 
         Transition dominantTransition = currentState.GetOutTransition(dominantInputSymbol);
 
-        rollDie(dominantTransition);                                                      //      Step 7 - Strength of output symbol is equal to (input symbol strength * confidence)/(1+confidence)
+        rollDie(dominantTransition);                                                     //      Step 7 - Strength of output symbol is equal to (input symbol strength * confidence)/(1+confidence)
 
-        Mark(dominantInput);                                                            //      Step 8 - Mark the output symbol and its strength for later modification
+        Mark(dominantInput);                                                             //      Step 8 - Mark the output symbol and its strength for later modification
 
+        UpdateExpectations();
+
+        lastState = currentState;                                                        //      Step 9.5 - Set last state to be current state (ql = c)
+        Transition transitionToNew = new Transition(currentState, dominantInputSymbol);                                                  
+        currentState = new State(transitionToNew);                                       //      Step 10 -  c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
+        lastInputSymbol = currentInputSymbol;                                            //      Step 10.5 - Set current input symbol to last input symbol al = ad
+
+        CheckIfRewardOrPunishment();
         Output();
         /*
 
 
         Try doing: 
-            - init statement
-                - q0 is initial state which can be set
 
-            - Step 9.5 Set last state to be current state (ql = c)
-            - c = delta(c, ad) Set c to be where transition delta(c,ad) takes you
-            - Step 10.5 Set current input symbol to last input symbol al = ad
+
+            
+            
+            - 
             - Step 11 If current state is listed in Reward State list, Apply Reward.  Else if current state is listed in Punishment State List, apply punishment.  Else if does not exist in either list, apply conditioning
                 - How to set reward state?
                 Apply Reward
@@ -458,6 +467,10 @@ public class Program : MonoBehaviour
     // ///Expectations are how transitions relate to each other
     // Symbols are how transitions relate to states
 
+    private void CheckIfRewardOrPunishment()
+    {
+        if ()
+    }
     private void Output()
     {
         Debug.LogWarning("Current Number of States in the System: " + states.Count);
