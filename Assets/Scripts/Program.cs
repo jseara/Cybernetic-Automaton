@@ -379,15 +379,26 @@ public class Program : MonoBehaviour
         }
         foreach (String a in inputAlphabet) // for each symbol in the input language 
         {
+            expectation = currentTrans.GetExpectationMatrix();
             returnValues = checkForExpectationExistence(lastState, lastInputSymbol, currentState, a);
             if (returnValues[0] != -1 && returnValues[1] != -1)
             {
                 if (!currentInputBatch.ContainsKey(a)) //     if an expectation exists from the previous state to the current state using input symbol a and a was not in the current input batch
                 {
-                    float deltaExpectations = - expectationLearnFactor *  //TODO NEXT!!!!
-                    //         lower expectation using math
+                    float deltaExpectations = -expectationLearnFactor * expectation[returnValues[0], returnValues[1]];
+                    float[,] confi = lastTrans.GetConfidence();
+                    confi[returnValues[0], returnValues[1]] =
+                        confi[returnValues[0], returnValues[1]] * 1 - confidenceLearnFactor * Math.Abs(deltaExpectations); 
+                    currentTrans.SetConfidence(confi);
 
-                    //         lower confidence using math
+
+                    expectation = lastTrans.GetExpectationMatrix();
+                    returnValues = checkForExpectationExistence(currentState, a, lastState, lastInputSymbol);
+                    deltaExpectations = - expectationLearnFactor * expectation[returnValues[0], returnValues[1]]; 
+                    confi = lastTrans.GetConfidence();
+                    confi[returnValues[0], returnValues[1]] =
+                        confi[returnValues[0], returnValues[1]] * 1 - confidenceLearnFactor * Math.Abs(deltaExpectations); 
+                    lastTrans.SetConfidence(confi);
                 }
             }
 
@@ -402,8 +413,7 @@ public class Program : MonoBehaviour
                     returnValues = checkForExpectationExistence(lastState, lastInputSymbol, q, a);
                     if (returnValues[0] != -1 && returnValues[1] != -1)
                     {
-                        /*DO MATH*/
-                        //         lower
+                        float[,] deltaExpectation = currentTrans.GetExpectationMatrix(); 
                     }
                 }
             }
@@ -422,6 +432,7 @@ public class Program : MonoBehaviour
                     returnValues = checkForExpectationExistence(lastState, b, currentState, a);
                     if (returnValues[0] != -1 && returnValues[1] != -1)
                     {
+                        float[,] deltaExpectation = currentTrans.GetExpectationMatrix(); 
                         //             increase expectation
                         //             increase confidence
                     }
