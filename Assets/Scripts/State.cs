@@ -50,6 +50,22 @@ public class State
         }
         return null;
     }
+
+    public void MarkAsRewardOrPunishment(string type)
+    {
+        if (type.Equals("reward"))
+        {
+            rewardState = true;
+        }
+        else if (type.Equals("punishment"))
+        {
+            punishmentState = true;
+        }
+        else
+        {
+            Debug.LogError("Incorrect call to function");
+        }
+    }
     // public 
 }
 
